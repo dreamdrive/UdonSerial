@@ -10,6 +10,15 @@
 /[Ll]ogs/
 /[Uu]ser[Ss]ettings/
 
+/Packages/
+/Assets/Gizmos/
+/Assets/SerializedUdonPrograms/
+/Assets/Udon/
+/Assets/UdonSharp/
+/Assets/VRChat Examples/
+/Assets/VRCSDK/
+
+
 # MemoryCaptures can get excessive in size.
 # They also could contain extremely sensitive data
 /[Mm]emoryCaptures/
