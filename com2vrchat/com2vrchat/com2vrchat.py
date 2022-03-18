@@ -23,39 +23,27 @@ for i in range(i_num):
 midiout = m.Output(3)
 
 def log2com():
+
 	flag = 0
 	rev_buf =''
 	enc_buf = ''
+
 	with open(filename,'r',encoding='UTF-8') as f:
-		# f.seek(-1000, 2)
 		while True:
 			c = f.read(1)							# 1バイト読み込み
 			if c != '':								# EOFではないとき
 				if ((flag == 12) and (c == ']')) :
 					flag = 0							# フラグクリア
 					enc_buf = bytes.fromhex(rev_buf)	# 16進数をbyteにエンコード
-					print("[",end='')					# 標準ファクリア
-					# print(enc_buf.decode(),end='')		# 標準出力(改行なし) byteを文字列にデコード
+					# print("[",end='')					# 標準出力 (バイナリを送るとprintがコケるのでコメントアウト)
+					# print(enc_buf.decode(),end='')	# 標準出力 (改行なし) byteを文字列にデコード (バイナリを送るとprintがコケるのでコメントアウト)
 					comport.write(enc_buf)				# シリアルポート出力
-					print("]OUTPUT")					# 標準ファクリア
-					enc_buf =''							# バ出力
+					# print("]OUTPUT")					# 標準出力 (バイナリを送るとprintがコケるのでコメントアウト)
+					enc_buf =''							# バッッファクリア
 					rev_buf =''							# バッッファクリア
 
-				elif ((flag == 12) and (c == '}')) :
-					flag = 0							# フラグクリア
-					enc_buf = bytes.fromhex(rev_buf)	# 16進数をbyteにエンコード
-					print("[",end='')					# 標準ファクリア
-					print(enc_buf.decode(),end='')		# 標準出力(改行なし) byteを文字列にデコード
-					comport.write(enc_buf)				# シリアルポート出力
-					print("<CRLF>]OUTPUT")				# 標準ファクリア
-					comport.write("\n\r".encode())		# シリアルポート出力(改行コード)
-					rev_buf =''							# バッファクリア
-					enc_buf =''							# バッファクリア
-
 				elif flag == 12:
-				   # print(c, end='')	# 改行なし標準出力
-				   # comport.write(c.encode()) # COMポート出力
-					rev_buf = rev_buf + c				# 受信した1文字結合
+					rev_buf = rev_buf + c				# 受信した1バイトを受信バッファに結合
 
 				elif ((flag == 11) and (c == '[')) :
 					flag = 12
@@ -87,19 +75,19 @@ def log2com():
 def com2midi():
 
 	while True:
-		send_buf = comport.read(1)
-		send_buf_value = ord(send_buf)
+		send_buf = comport.read(1)					# シリアルポートから1バイト受信(待ち)
+		send_buf_value = ord(send_buf)				# 1バイトのバイナリを整数に変換(0-255)
 
-		# // で整数の商
 		# %で余り
-		send_num = send_buf_value % 128
-		send_vel = send_buf_value // 128
+		send_num = send_buf_value % 128				# 8bitの整数0-255を7bit(0-127)と1bitに分離
+		# // で整数の商
+		send_vel = send_buf_value // 128			# 8bitの整数0-255を7bit(0-127)と1bitに分離
 
 		# numver , vel , ch
-		midiout.note_on(send_num, send_vel, 1)
-		print("SEND [",1,"] : ",send_num,send_vel)
+		midiout.note_on(send_num, send_vel, 1)		# MIDIを発行
+		print("SEND [",1,"] : ",send_num,send_vel)	# 発行したMIDIの確認表示
 
-		time.sleep(0.002)
+		time.sleep(0.001)							# 1msecのスリープで1000byte/secの制限(8000bps) <- もっとスピードを上げるなら削除しても構わない
 
 	midiout.close()
 	m.quit()

@@ -15,7 +15,7 @@ public class RealSerial : UdonSharpBehaviour
 
     void Start()
     {
-        Serial_println("Start! Serial");
+        setup();
     }
 
     void Update()
@@ -23,6 +23,8 @@ public class RealSerial : UdonSharpBehaviour
         loop();
     }
 
+    // MIDIを受信したときに呼ばれる関数
+    // 受信したMIDIを1byteのデータに復号して、リングバッファに格納する
     public override void MidiNoteOn(int channel, int number, int velocity)
     {
         int rev_number;
@@ -32,12 +34,14 @@ public class RealSerial : UdonSharpBehaviour
         if (write_index == 1024) write_index = 0;
     }
 
+    // 1バイトのデータをローカルPCに向けて送る
     private void Serial_write(byte send_data)
     {
         Debug.Log("OUTPUT_DATA[" + string.Format("{0:X2}", send_data) + "]");
         // 1バイトを16進数表示にしてログに出力
     }
 
+    // 文字列をローカルPCに向けて送る(改行なし)
     private void Serial_print(string send_data)
     {
         char[] values = send_data.ToCharArray();
@@ -59,6 +63,7 @@ public class RealSerial : UdonSharpBehaviour
         // 1バイトを16進数表示にしてログに出力
     }
 
+    // 文字列をローカルPCに向けて送る(改行あり)
     private void Serial_println(string send_data)
     {
         char[] values = send_data.ToCharArray();
@@ -73,18 +78,21 @@ public class RealSerial : UdonSharpBehaviour
             output_data = output_data + string.Format("{0:X2}", value);
         }
 
-        // 改行ありの場合は最後が"]"
-        output_data = output_data + "]";
+        // 改行ありの場合は最後が"0D0A]" (\r\n) 復帰改行
+        output_data = output_data + "0D0A]";
 
         Debug.Log(output_data);
         // 1バイトを16進数表示にしてログに出力
     }
 
+    // 受信バッファに未処理のデータがあるかどうか
     private bool Serial_available() {
         if (write_index == read_index) return false;   // 処理すべきバッファがない
         else return true;                              // 処理すべきバッファがある
     }
 
+    // 1バイト受信する
+    // 受信バッファに処理すべきデータがないときは0が返ってくる(0x00の時と同じ値を返すため、ちょっと微妙な仕様)
     private byte Serial_read() {
         byte rev_data;
 
@@ -97,6 +105,8 @@ public class RealSerial : UdonSharpBehaviour
         return rev_data;
     }
 
+    // 1バイト受信する
+    // ただし、受信バッファのインデックスを進めない
     private byte Serial_peek()
     {
         byte rev_data;
@@ -109,14 +119,25 @@ public class RealSerial : UdonSharpBehaviour
         return rev_data;
     }
 
+    // 受信バッファのクリア
     private void Serial_flush()
     {
         // 受信バッファをクリア(インデックスを同じ値に)
         read_index = write_index;
     }
 
-    private void loop(){
+    // Arduinoライクに用意したsetup関数、この中で処理を書く
+    // ワールド起動時に呼ばれる関数です。
+    // この関数を自由に編集してください。
+    private void setup()
+    {
+        Serial_println("Start! Serial");
+    }
 
+    // Arduinoライクに用意したloop関数、この中で処理を書く
+    // 毎フレーム呼ばれる関数になります。
+    // この関数を自由に編集してください。
+    private void loop(){
         byte key;
 
         // 受信データがあった時だけ、処理を行う
@@ -124,7 +145,6 @@ public class RealSerial : UdonSharpBehaviour
         {       
             key = Serial_read();            // 1バイトだけバッファに受信
             Serial_write(key);              // 受信したデータを送り返す
-
         }
     }
 }
