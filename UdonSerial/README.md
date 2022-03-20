@@ -1,3 +1,8 @@
+# UdonSerial
+
+こちらは、サンプルワールドUdon Serial Echoのプロジェクトになります。  
+VRChat SDKとUdon Sharpをインポートしていただくと、そのままアップロード可能なシーンとプレハブを同梱しています。
+
 # UdonSerialのサンプル関数について
 
 Udon Serial Echoのサンプルワールドに用意した、Arduinoライクな関数群の紹介です。
