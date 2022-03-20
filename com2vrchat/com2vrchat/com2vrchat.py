@@ -7,10 +7,10 @@ import time
 import threading
 
 # VRChatの現行のワールドログ
-filename = 'C:\\Users\\hirokazu\\AppData\\LocalLow\\VRChat\\VRChat\\output_log_23-25-06.txt'
+filename = 'C:\\Users\\(Windowsログインユーザー名)\\AppData\\LocalLow\\VRChat\\VRChat\\output_log_XX-XX-XX.txt'
 
 #接続したいCOMポートを選択
-comport = serial.Serial('COM9', baudrate=9600, parity=serial.PARITY_NONE)
+comport = serial.Serial('COM1', baudrate=115200, parity=serial.PARITY_NONE)
 
 m.init()
 i_num = m.get_count()
@@ -19,7 +19,7 @@ for i in range(i_num):
 	print(i)
 	print(m.get_device_info(i))
 
-# 直前のMIDIポート一覧から仮想デバイスのポート(自分の環境では「IAC Driver My Port」)のIDを確認して、その数値にしてください
+# 直前のMIDIポート一覧から仮想デバイスのポート選択(自分の環境では「IAC Driver My Port」)のIDを確認して、その数値に変更してください
 midiout = m.Output(3)
 
 def log2com():
@@ -30,15 +30,15 @@ def log2com():
 
 	with open(filename,'r',encoding='UTF-8') as f:
 		while True:
-			c = f.read(1)							# 1バイト読み込み
+			c = f.read(1)							# ファイルを1バイト読み込み
 			if c != '':								# EOFではないとき
 				if ((flag == 12) and (c == ']')) :
 					flag = 0							# フラグクリア
 					enc_buf = bytes.fromhex(rev_buf)	# 16進数をbyteにエンコード
-					# print("[",end='')					# 標準出力 (バイナリを送るとprintがコケるのでコメントアウト)
-					# print(enc_buf.decode(),end='')	# 標準出力 (改行なし) byteを文字列にデコード (バイナリを送るとprintがコケるのでコメントアウト)
+					# print("[",end='')					# 標準出力 (改行なし) <- 表示が実行速度のボトルネックになるのでデバッグ用本運用はコメントアウト
+					# print(enc_buf.decode(),end='')	# 標準出力 (改行なし) byteを文字列にデコード <- バイナリ転送時はエラーになるので注意！<- 表示が実行速度のボトルネックになるのでデバッグ用本運用はコメントアウト
 					comport.write(enc_buf)				# シリアルポート出力
-					# print("]OUTPUT")					# 標準出力 (バイナリを送るとprintがコケるのでコメントアウト)
+					# print("]OUTPUT")					# 標準出力 <- 表示が実行速度のボトルネックになるのでデバッグ用本運用はコメントアウト
 					enc_buf =''							# バッッファクリア
 					rev_buf =''							# バッッファクリア
 
@@ -75,19 +75,18 @@ def log2com():
 def com2midi():
 
 	while True:
-		send_buf = comport.read(1)					# シリアルポートから1バイト受信(待ち)
-		send_buf_value = ord(send_buf)				# 1バイトのバイナリを整数に変換(0-255)
+		send_buf = comport.read(1)						# シリアルポートから1バイト受信(待ち)
 
-		# %で余り
-		send_num = send_buf_value % 128				# 8bitの整数0-255を7bit(0-127)と1bitに分離
-		# // で整数の商
-		send_vel = send_buf_value // 128			# 8bitの整数0-255を7bit(0-127)と1bitに分離
+		# 1byteのデータをMIDIに変換
+		send_buf_value = ord(send_buf)					# 1バイトのバイナリを整数に変換(0-255)
+		send_num = send_buf_value % 128					# 8bitの整数0-255を7bit(0-127)と1bitに分離 ( % で余り)
+		send_vel = send_buf_value // 128				# 8bitの整数0-255を7bit(0-127)と1bitに分離 ( // で整数の商)
 
-		# numver , vel , ch
-		midiout.note_on(send_num, send_vel, 1)		# MIDIを発行
-		print("SEND [",1,"] : ",send_num,send_vel)	# 発行したMIDIの確認表示
+		# MIDIを発行
+		midiout.note_on(send_num, send_vel, 1)			# MIDIを発行 (numver , vel , ch)
+		# print("SEND [",1,"] : ",send_num,send_vel)	# 発行したMIDIの確認表示 <- 表示が実行速度のボトルネックになるのでデバッグ用本運用はコメントアウト
 
-		time.sleep(0.001)							# 1msecのスリープで1000byte/secの制限(8000bps) <- もっとスピードを上げるなら削除しても構わない
+		# time.sleep(0.001)								# 1msecのスリープで1000byte/secの制限(8000bps) <- 受信待ち時間に引っ張られるので特に明示的なsleepはなくて問題なし
 
 	midiout.close()
 	m.quit()
