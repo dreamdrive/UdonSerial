@@ -5,12 +5,37 @@ import pygame.midi as m
 import serial
 import time
 import threading
+import os
+from pathlib import Path
+import getpass
 
 # VRChatの現行のワールドログ
-filename = 'C:\\Users\\(Windowsログインユーザー名)\\AppData\\LocalLow\\VRChat\\VRChat\\output_log_XX-XX-XX.txt'
+# filename = 'C:\\Users\\(Windowsログインユーザー名)\\AppData\\LocalLow\\VRChat\\VRChat\\output_log_XX-XX-XX.txt'
+
+# ログイン名の取得
+user = getpass.getuser()
+
+# 取得したログイン名を表示
+print(f'getpass.getuser() = {user}')
+
+# VRChatのログの場所
+vrchat_path = 'C:\\Users\\' + user + '\\AppData\\LocalLow\\VRChat\\VRChat\\'
+
+# --------------------------------------------------
+# 最新のVRChatログを自動選択
+p = Path(vrchat_path)
+files = list(p.glob("*"))
+file_updates = {file_path: os.stat(file_path).st_mtime for file_path in files}
+
+newst_file_path = max(file_updates, key=file_updates.get)
+print(newst_file_path)
+
+filename = newst_file_path
+# --------------------------------------------------
+
 
 #接続したいCOMポートを選択
-comport = serial.Serial('COM1', baudrate=115200, parity=serial.PARITY_NONE)
+comport = serial.Serial('COM9', baudrate=115200, parity=serial.PARITY_NONE)
 
 m.init()
 i_num = m.get_count()

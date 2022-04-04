@@ -37,11 +37,6 @@ https://www.tobias-erichsen.de/software/loopmidi.html
 
 # pythonコードの使い方
 
-```python
-# VRChatの現行のワールドログ
-filename = 'C:\\Users\\(ユーザー名)\\AppData\\LocalLow\\VRChat\\VRChat\\output_log_XX-XX-XX.txt'
-```
-
 この部分を現在、joinしているVRChatログのパスに書き換えます
 
 ```python
@@ -57,6 +52,10 @@ midiout = m.Output(3)
 ```
 
 お使いの環境に合わせて、Loop MIDIの入力ポートの番号を設定します。
+
+(2022/04/05) VRChatのワールドログを自動取得に変更  
+python立ち上げ時の最新のログを取得します。（ワールド移動時には、アプリを立ち上げ直してください。
+
 
 # UdonSerialの実装 (Arduinoライク)
 
@@ -99,7 +98,8 @@ OUTPUT_DATA[48656C6C6F20576F726C640D0A]
 ```
 
 # 履歴
-2022/03/20 : とりあえず、リリース
+2022/03/20 : とりあえず、リリース  
+2022/04/05 : VRChatログの自動取得に変更
 
 # Author
 - Micchy  
